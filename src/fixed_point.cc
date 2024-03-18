@@ -23,5 +23,17 @@ FixedPoint FixedPoint::operator+(FixedPoint other) {
     throw std::overflow_error("The maximum value in a fixed-point number exceeded!");
   }
 
+  if (result < std::numeric_limits<int32_t>::min()) {
+    throw std::underflow_error("The minimum value in a fixed-point number exceeded!");
+  }
+
   return FixedPoint(static_cast<int32_t>(result));
+}
+
+FixedPoint FixedPoint::operator-() {
+  return FixedPoint(-value_);
+}
+
+FixedPoint FixedPoint::operator-(FixedPoint other) {
+  return *this + (-other);
 }
