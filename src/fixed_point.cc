@@ -6,7 +6,7 @@
 #include <limits>
 
 FixedPoint::FixedPoint(float value) {
-  value_ = static_cast<int32_t>(value * (1 << fraction_bits_));
+  value_ = static_cast<int32_t>(value * (1 << kFractionBits));
 }
 
 FixedPoint::FixedPoint(int32_t value) {
@@ -14,19 +14,13 @@ FixedPoint::FixedPoint(int32_t value) {
 }
 
 float FixedPoint::GetFloat() {
-  return static_cast<float>(value_) / (1 << fraction_bits_);
+  return static_cast<float>(value_) / (1 << kFractionBits);
 }
 
 FixedPoint FixedPoint::operator+(FixedPoint other) {
   int64_t result = value_ + other.value_;
 
-  if (result > std::numeric_limits<int32_t>::max()) {
-    throw std::overflow_error("The maximum value in a fixed-point number exceeded!");
-  }
-
-  if (result < std::numeric_limits<int32_t>::min()) {
-    throw std::underflow_error("The minimum value in a fixed-point number exceeded!");
-  }
+  CheckOverUnderFlow(result);
 
   return FixedPoint(static_cast<int32_t>(result));
 }
@@ -40,31 +34,28 @@ FixedPoint FixedPoint::operator-(FixedPoint other) {
 }
 
 FixedPoint FixedPoint::operator*(FixedPoint other) {
-  int64_t result = (value_ * other.value_) >> fraction_bits_;
+  int64_t result = (value_ * other.value_) >> kFractionBits;
 
-  if (result > std::numeric_limits<int32_t>::max()) {
-    throw std::overflow_error("The maximum value in a fixed-point number exceeded!");
-  }
-
-  if (result < std::numeric_limits<int32_t>::min()) {
-    throw std::underflow_error("The minimum value in a fixed-point number exceeded!");
-  }
+  CheckOverUnderFlow(result);
 
   return FixedPoint(static_cast<int32_t>(result));
 }
 
 FixedPoint FixedPoint::operator/(FixedPoint other) {
   int64_t result = static_cast<int64_t>(
-    (static_cast<float>(value_) / other.value_) * (1 << fraction_bits_));
+    (static_cast<float>(value_) / other.value_) * (1 << kFractionBits));
 
+  CheckOverUnderFlow(result);
 
-  if (result > std::numeric_limits<int32_t>::max()) {
+  return FixedPoint(static_cast<int32_t>(result));
+}
+
+void FixedPoint::CheckOverUnderFlow(int64_t value) {
+  if (value > std::numeric_limits<int32_t>::max()) {
     throw std::overflow_error("The maximum value in a fixed-point number exceeded!");
   }
 
-  if (result < std::numeric_limits<int32_t>::min()) {
+  if (value < std::numeric_limits<int32_t>::min()) {
     throw std::underflow_error("The minimum value in a fixed-point number exceeded!");
   }
-
-  return FixedPoint(static_cast<int32_t>(result));
 }

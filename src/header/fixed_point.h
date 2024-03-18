@@ -20,7 +20,9 @@ class FixedPoint {
   FixedPoint operator/(FixedPoint other);
 
  private:
-  static const uint8_t fraction_bits_ = 16;
+  static const uint8_t kFractionBits = 16;
+
+  void CheckOverUnderFlow(int64_t value);
 
   int32_t value_;
 };
