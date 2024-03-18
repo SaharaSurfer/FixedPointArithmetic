@@ -1,5 +1,6 @@
 #include "header/fixed_point.h"
 
+#include <cmath>
 #include <cstdint>
 #include <stdexcept>
 #include <limits>
@@ -36,4 +37,34 @@ FixedPoint FixedPoint::operator-() {
 
 FixedPoint FixedPoint::operator-(FixedPoint other) {
   return *this + (-other);
+}
+
+FixedPoint FixedPoint::operator*(FixedPoint other) {
+  int64_t result = (value_ * other.value_) >> fraction_bits_;
+
+  if (result > std::numeric_limits<int32_t>::max()) {
+    throw std::overflow_error("The maximum value in a fixed-point number exceeded!");
+  }
+
+  if (result < std::numeric_limits<int32_t>::min()) {
+    throw std::underflow_error("The minimum value in a fixed-point number exceeded!");
+  }
+
+  return FixedPoint(static_cast<int32_t>(result));
+}
+
+FixedPoint FixedPoint::operator/(FixedPoint other) {
+  int64_t result = static_cast<int64_t>(
+    (static_cast<float>(value_) / other.value_) * (1 << fraction_bits_));
+
+
+  if (result > std::numeric_limits<int32_t>::max()) {
+    throw std::overflow_error("The maximum value in a fixed-point number exceeded!");
+  }
+
+  if (result < std::numeric_limits<int32_t>::min()) {
+    throw std::underflow_error("The minimum value in a fixed-point number exceeded!");
+  }
+
+  return FixedPoint(static_cast<int32_t>(result));
 }

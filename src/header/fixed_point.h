@@ -15,6 +15,10 @@ class FixedPoint {
   FixedPoint operator-();
   FixedPoint operator-(FixedPoint other);
 
+  FixedPoint operator*(FixedPoint other);
+
+  FixedPoint operator/(FixedPoint other);
+
  private:
   static const uint8_t fraction_bits_ = 16;
 
