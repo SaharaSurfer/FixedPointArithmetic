@@ -6,7 +6,6 @@
 class FixedPoint {
  public:
   FixedPoint(float value);
-  FixedPoint(int32_t value);
 
   float GetFloat();
 

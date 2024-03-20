@@ -9,10 +9,6 @@ FixedPoint::FixedPoint(float value) {
   value_ = static_cast<int32_t>(value * (1 << kFractionBits));
 }
 
-FixedPoint::FixedPoint(int32_t value) {
-  value_ = value;
-}
-
 float FixedPoint::GetFloat() {
   return static_cast<float>(value_) / (1 << kFractionBits);
 }
@@ -62,7 +58,10 @@ FixedPoint FixedPoint::operator+(const FixedPoint& other) const {
 }
 
 FixedPoint FixedPoint::operator-() const {
-  return FixedPoint(-value_);
+  FixedPoint result = *this;
+  result.value_ = -result.value_;
+  
+  return result;
 }
 
 FixedPoint FixedPoint::operator-(const FixedPoint& other) const {
