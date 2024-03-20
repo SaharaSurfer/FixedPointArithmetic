@@ -46,7 +46,7 @@ FixedPoint& FixedPoint::operator*=(const FixedPoint& other) {
 
 FixedPoint& FixedPoint::operator/=(const FixedPoint& other) {
   int64_t result = static_cast<int64_t>(
-    (static_cast<float>(value_) / other.value_) * (1 << kFractionBits));
+    (static_cast<double>(value_) / other.value_) * (1 << kFractionBits));
 
   CheckOverUnderFlow(result);
 
