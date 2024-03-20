@@ -17,40 +17,76 @@ float FixedPoint::GetFloat() {
   return static_cast<float>(value_) / (1 << kFractionBits);
 }
 
-FixedPoint FixedPoint::operator+(FixedPoint other) {
+FixedPoint& FixedPoint::operator+=(const FixedPoint& other) {
   int64_t result = value_ + other.value_;
 
   CheckOverUnderFlow(result);
 
-  return FixedPoint(static_cast<int32_t>(result));
+  value_ = static_cast<int32_t>(result);
+  return *this;
 }
 
-FixedPoint FixedPoint::operator-() {
-  return FixedPoint(-value_);
+FixedPoint& FixedPoint::operator-=(const FixedPoint& other) {
+  int64_t result = value_ - other.value_;
+
+  CheckOverUnderFlow(result);
+
+  value_ = static_cast<int32_t>(result);
+  return *this;
 }
 
-FixedPoint FixedPoint::operator-(FixedPoint other) {
-  return *this + (-other);
-}
-
-FixedPoint FixedPoint::operator*(FixedPoint other) {
+FixedPoint& FixedPoint::operator*=(const FixedPoint& other) {
   int64_t result = (value_ * other.value_) >> kFractionBits;
 
   CheckOverUnderFlow(result);
 
-  return FixedPoint(static_cast<int32_t>(result));
+  value_ = static_cast<int32_t>(result);
+  return *this;
 }
 
-FixedPoint FixedPoint::operator/(FixedPoint other) {
+FixedPoint& FixedPoint::operator/=(const FixedPoint& other) {
   int64_t result = static_cast<int64_t>(
     (static_cast<float>(value_) / other.value_) * (1 << kFractionBits));
 
   CheckOverUnderFlow(result);
 
-  return FixedPoint(static_cast<int32_t>(result));
+  value_ = static_cast<int32_t>(result);
+  return *this;
 }
 
-void FixedPoint::CheckOverUnderFlow(int64_t value) {
+FixedPoint FixedPoint::operator+(const FixedPoint& other) const {
+  FixedPoint result = *this;
+  result += other;
+
+  return result;
+}
+
+FixedPoint FixedPoint::operator-() const {
+  return FixedPoint(-value_);
+}
+
+FixedPoint FixedPoint::operator-(const FixedPoint& other) const {
+  FixedPoint result = *this;
+  result -= other;
+
+  return result;
+}
+
+FixedPoint FixedPoint::operator*(const FixedPoint& other) const {
+  FixedPoint result = *this;
+  result *= other;
+
+  return result;
+}
+
+FixedPoint FixedPoint::operator/(const FixedPoint& other) const {
+  FixedPoint result = *this;
+  result /= other;
+
+  return result;
+}
+
+void FixedPoint::CheckOverUnderFlow(int64_t value) const {
   if (value > std::numeric_limits<int32_t>::max()) {
     throw std::overflow_error("The maximum value in a fixed-point number exceeded!");
   }

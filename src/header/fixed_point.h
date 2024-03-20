@@ -10,19 +10,21 @@ class FixedPoint {
 
   float GetFloat();
 
-  FixedPoint operator+(FixedPoint other);
+  FixedPoint& operator+=(const FixedPoint& other);
+  FixedPoint& operator-=(const FixedPoint& other);
+  FixedPoint& operator*=(const FixedPoint& other);
+  FixedPoint& operator/=(const FixedPoint& other);
 
-  FixedPoint operator-();
-  FixedPoint operator-(FixedPoint other);
-
-  FixedPoint operator*(FixedPoint other);
-
-  FixedPoint operator/(FixedPoint other);
+  FixedPoint operator+(const FixedPoint& other) const;
+  FixedPoint operator-() const;
+  FixedPoint operator-(const FixedPoint& other) const;
+  FixedPoint operator*(const FixedPoint& other) const;
+  FixedPoint operator/(const FixedPoint& other) const;
 
  private:
   static const uint8_t kFractionBits = 16;
 
-  void CheckOverUnderFlow(int64_t value);
+  void CheckOverUnderFlow(int64_t value) const;
 
   int32_t value_;
 };
