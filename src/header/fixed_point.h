@@ -143,11 +143,11 @@ class FixedPoint {
   }
 
   constexpr void CheckOverUnderFlow(int64_t value) const {
-    if (value > std::numeric_limits<float>::max()) {
+    if (value > std::numeric_limits<int32_t>::max()) {
       throw std::overflow_error("Overflow in FixedPoint arithmetic.");
     }
 
-    if (value < std::numeric_limits<float>::min()) {
+    if (value < std::numeric_limits<int32_t>::min()) {
       throw std::underflow_error("Underflow in FixedPoint arithmetic.");
     }
   }
