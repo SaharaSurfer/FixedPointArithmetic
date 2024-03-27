@@ -4,16 +4,36 @@
 #include <cstdint>
 #include <cmath>
 #include <stdexcept>
+#include <type_traits>
 
 template<uint8_t fraction_bits=16>
 class FixedPoint {
  public:
-  FixedPoint(float value) {
+  template<typename Integral,
+           typename = std::enable_if_t<std::is_integral_v<Integral>>>
+  explicit FixedPoint(Integral value) {
+    if (abs(value) > (1 << (31 - fraction_bits)) - 1) {
+      throw std::overflow_error("Overflow in FixedPoint arithmetic.");
+    }
+
+    int64_t result = static_cast<int64_t>(value) << fraction_bits;
+    CheckOverUnderFlow(result);
+    value_ = static_cast<int32_t>(result);
+  }
+
+  template<typename Fraction,
+           typename = std::enable_if_t<std::is_floating_point_v<Fraction>>,
+           bool plug=true>
+  explicit FixedPoint(Fraction value) {
+    if (value > std::numeric_limits<double>::max() / (1 << fraction_bits)) {
+        throw std::overflow_error("Overflow in FixedPoint arithmetic.");
+    } else if (value < std::numeric_limits<double>::min() / (1 << fraction_bits)) {
+        throw std::underflow_error("Underflow in FixedPoint arithmetic.");
+    }
+
     int64_t result = static_cast<int64_t>(
         std::round(static_cast<double>(value) * (1 << fraction_bits)));
-
     CheckOverUnderFlow(result);
-
     value_ = static_cast<int32_t>(result);
   }
 
@@ -108,7 +128,7 @@ class FixedPoint {
 
  private:
   template<uint8_t other_fb>
-  constexpr int32_t GetScaledValue(const FixedPoint<other_fb>& other) const {
+  constexpr int64_t GetScaledValue(const FixedPoint<other_fb>& other) const {
     int64_t result = other.GetUnderlyingInt();
 
     if constexpr (fraction_bits > other_fb) {
@@ -117,15 +137,17 @@ class FixedPoint {
       result >>= abs(fraction_bits - other_fb);
     }
 
+    CheckOverUnderFlow(result);
+
     return result;
   }
 
   constexpr void CheckOverUnderFlow(int64_t value) const {
-    if (value > std::numeric_limits<int32_t>::max()) {
+    if (value > std::numeric_limits<float>::max()) {
       throw std::overflow_error("Overflow in FixedPoint arithmetic.");
     }
 
-    if (value < std::numeric_limits<int32_t>::min()) {
+    if (value < std::numeric_limits<float>::min()) {
       throw std::underflow_error("Underflow in FixedPoint arithmetic.");
     }
   }
