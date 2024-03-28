@@ -6,39 +6,26 @@
 #include <stdexcept>
 #include <type_traits>
 
-template<uint8_t fraction_bits=16>
+template<uint8_t bits>
+concept less_int_bits = bits < 32;
+
+template<uint8_t fraction_bits=16> requires less_int_bits<fraction_bits>
 class FixedPoint {
  public:
-  template<typename Integral,
-           typename = std::enable_if_t<std::is_integral_v<Integral>>>
-  explicit FixedPoint(Integral value) {
-    if (abs(value) > (1 << (31 - fraction_bits)) - 1) {
+  template<typename NumericType>
+  explicit FixedPoint(NumericType value) {
+    int32_t max_int = (1LL << (31 - fraction_bits)) - 1;
+
+    if (abs(value) > max_int) {
       throw std::overflow_error("Overflow in FixedPoint arithmetic.");
     }
 
-    int64_t result = static_cast<int64_t>(value) << fraction_bits;
-    CheckOverUnderFlow(result);
-    value_ = static_cast<int32_t>(result);
-  }
-
-  template<typename Fraction,
-           typename = std::enable_if_t<std::is_floating_point_v<Fraction>>,
-           bool plug=true>
-  explicit FixedPoint(Fraction value) {
-    if (value > std::numeric_limits<double>::max() / (1 << fraction_bits)) {
-        throw std::overflow_error("Overflow in FixedPoint arithmetic.");
-    } else if (value < std::numeric_limits<double>::min() / (1 << fraction_bits)) {
-        throw std::underflow_error("Underflow in FixedPoint arithmetic.");
-    }
-
-    int64_t result = static_cast<int64_t>(
-        std::round(static_cast<double>(value) * (1 << fraction_bits)));
-    CheckOverUnderFlow(result);
-    value_ = static_cast<int32_t>(result);
+    value_ = static_cast<int32_t>(std::round(value * (1 << fraction_bits)));
   }
 
   float GetFloat() const {
-    return static_cast<float>(value_) / (1 << fraction_bits);
+    return value_ / (1 << fraction_bits) +
+        static_cast<float>(value_ % (1 << fraction_bits)) / (1 << fraction_bits);
   }
 
   int32_t GetUnderlyingInt() const {
@@ -67,8 +54,8 @@ class FixedPoint {
 
   template<uint8_t other_fb>
   FixedPoint& operator*=(const FixedPoint<other_fb>& other) {
-    int64_t result = (static_cast<int64_t>(value_) *
-        other.GetUnderlyingInt()) >> other_fb;
+    int64_t result = (static_cast<int64_t>(value_) * 
+                      other.GetUnderlyingInt()) >> other_fb;
 
     CheckOverUnderFlow(result);
 
@@ -78,8 +65,9 @@ class FixedPoint {
 
   template<uint8_t other_fb>
   FixedPoint& operator/=(const FixedPoint<other_fb>& other) {
-    int64_t result = (static_cast<int64_t>(value_) + (other.GetUnderlyingInt() >> 1)) /
-        other.GetUnderlyingInt() << other_fb;
+    int64_t result = (static_cast<int64_t>(value_) +
+                      (other.GetUnderlyingInt() >> 1)) /
+                     other.GetUnderlyingInt() << other_fb;
 
     CheckOverUnderFlow(result);
 
@@ -143,11 +131,11 @@ class FixedPoint {
   }
 
   constexpr void CheckOverUnderFlow(int64_t value) const {
-    if (value > std::numeric_limits<int32_t>::max()) {
+    if (value > static_cast<int64_t>(std::numeric_limits<int32_t>::max())) {
       throw std::overflow_error("Overflow in FixedPoint arithmetic.");
     }
 
-    if (value < std::numeric_limits<int32_t>::min()) {
+    if (value < static_cast<int64_t>(std::numeric_limits<int32_t>::min())) {
       throw std::underflow_error("Underflow in FixedPoint arithmetic.");
     }
   }

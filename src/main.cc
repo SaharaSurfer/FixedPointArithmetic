@@ -13,8 +13,8 @@ int main() {
   FixedPoint<24> d(std::sqrt(2));
   std::cout << d.GetFloat() << std::endl;
 
-  FixedPoint<8> e(1234.56);
+  FixedPoint<8> e((1 << 23) - 1);
   std::cout << e.GetFloat() << std::endl;
-
+  
   return 0;
 }
