@@ -7,24 +7,24 @@
 #include <type_traits>
 
 template<uint8_t bits>
-concept less_int_bits = bits < 32;
+concept less_int_bits = 0 <= bits < 32;
 
 template<uint8_t fraction_bits=16> requires less_int_bits<fraction_bits>
 class FixedPoint {
  public:
   template<typename NumericType>
   explicit FixedPoint(NumericType value) {
-    int32_t max_int = (1LL << (31 - fraction_bits)) - 1;
+    int32_t max_int = (1 << (31 - fraction_bits)) - 1;
 
     if (abs(value) > max_int) {
       throw std::overflow_error("Overflow in FixedPoint arithmetic.");
     }
 
-    value_ = static_cast<int32_t>(std::round(value * (1 << fraction_bits)));
+    value_ = static_cast<int32_t>(value * (1 << fraction_bits) + 0.5);
   }
 
   float GetFloat() const {
-    return value_ / (1 << fraction_bits) +
+    return value_ / (1 << fraction_bits) * 1.0f +
         static_cast<float>(value_ % (1 << fraction_bits)) / (1 << fraction_bits);
   }
 
@@ -65,9 +65,13 @@ class FixedPoint {
 
   template<uint8_t other_fb>
   FixedPoint& operator/=(const FixedPoint<other_fb>& other) {
-    int64_t result = (static_cast<int64_t>(value_) +
-                      (other.GetUnderlyingInt() >> 1)) /
-                     other.GetUnderlyingInt() << other_fb;
+    int32_t divisor = other.GetUnderlyingInt();
+    if (divisor == 0) {
+      throw std::logic_error("Division by zero");
+    }
+
+    int64_t result = ((static_cast<int64_t>(value_) << other_fb) +
+                      (divisor >> 1)) / divisor;
 
     CheckOverUnderFlow(result);
 
@@ -84,10 +88,7 @@ class FixedPoint {
   }
 
   FixedPoint operator-() const {
-    FixedPoint<fraction_bits> result = *this;
-    result.value_ = -result.value_;
-    
-    return result;
+    return FixedPoint(-value_);
   }
 
   template<uint8_t other_fb>
@@ -122,7 +123,7 @@ class FixedPoint {
     if constexpr (fraction_bits > other_fb) {
       result <<= (fraction_bits - other_fb);
     } else if constexpr (fraction_bits < other_fb) {
-      result >>= abs(fraction_bits - other_fb);
+      result >>= (other_fb - fraction_bits);
     }
 
     CheckOverUnderFlow(result);

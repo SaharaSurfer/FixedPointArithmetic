@@ -4,10 +4,10 @@
 #include "header/fixed_point.h"
 
 int main() {
-  FixedPoint a(100);
+  FixedPoint a(1.75);
   FixedPoint b(6.25f);
 
-  auto c = a - b;
+  auto c = a / b;
   std::cout << c.GetFloat() << std::endl;
 
   FixedPoint<24> d(std::sqrt(2));
